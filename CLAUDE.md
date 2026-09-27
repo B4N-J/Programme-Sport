@@ -26,8 +26,12 @@ L'app doit répondre à trois besoins, dans cet ordre :
    sur toutes les séries (règle 2.2.5 du programme), inapplicable de tête sur
    47 exercices.
 
-Contrainte transverse : **fonctionner sans réseau**, les salles captant souvent
-mal.
+4. **Durer** — série de jours suivis, courbe d'évolution des charges, et
+   surtout des données qui survivent à l'appareil. `localStorage` seul ne
+   suffit pas pour un historique qu'on veut relire dans un an.
+
+Contraintes transverses : **fonctionner sans réseau**, et **ne jamais perdre
+l'historique**.
 
 ## 3. Ressources
 
@@ -38,7 +42,10 @@ mal.
 | `src/data/seances.ts` | Les 5 séances et 2 jours de repos, transcrits de la section 3 |
 | `src/data/principes.ts` | Échauffement (§ 2.3), glossaire (§ 2.1), règles (§ 2.2), placement de la course (§ 3) |
 | `scripts/check-data.ts` | Compare markdown et `src/data/` : fiches, identifiants, séries, repos, RIR |
-| `scripts/check-rendu.tsx` | Monte les 56 vues hors navigateur et vérifie leur contenu, plus la logique de substitution et de progression |
+| `src/lib/journal.ts` | Journal durable : séances clôturées, historique complet, série de jours, fusion entre appareils, points de courbe |
+| `src/lib/sync.ts` | Appels REST vers Supabase et script SQL d'installation |
+| `scripts/check-rendu.tsx` | Monte les 57 vues hors navigateur et vérifie leur contenu, la substitution, la progression, la série et les courbes |
+| `scripts/check-sync.ts` | Rejoue un cycle de synchronisation à deux appareils contre un faux PostgREST |
 
 ## 4. Règles de travail
 
@@ -67,6 +74,19 @@ mal.
 - **HashRouter, pas BrowserRouter.** GitHub Pages n'accepte pas de règle de
   réécriture, et le geste « retour » ne fonctionne pas en PWA plein écran sans
   entrées d'historique.
+- **Le journal se fusionne, il ne s'écrase pas.** `fusionner()` réunit les
+  clés des deux côtés : séances indexées par date, historique indexé par date
+  et par exercice. Un « le dernier écrit gagne » ferait disparaître une séance
+  saisie sur l'autre appareil. L'import d'un fichier suit la même règle.
+- **Aucun identifiant Supabase dans le bundle.** Le dépôt est public (GitHub
+  Pages l'impose sur le plan gratuit) ; les identifiants se saisissent dans les
+  réglages et restent dans `localStorage`.
+- **Les effets de synchronisation dépendent des valeurs, pas de l'objet
+  `configSync`.** Celui-ci est recréé à chaque frappe dans les réglages et
+  déclencherait une requête par caractère saisi.
+- **Clôturer une séance est un geste explicite.** Cocher toutes les cases ne
+  clôture rien : on peut finir sans tout renseigner, ou renseigner sans s'être
+  entraîné. C'est la clôture qui alimente la série.
 - **Parser le markdown à l'exécution a été écarté** : les formats de séries sont
   trop hétérogènes (`2 × max moins 1`, `1 × 20 s par direction`,
   `3 × 8 à 12 par bras`). Le parseur de `check-data.ts` ne lit que les colonnes
@@ -84,6 +104,12 @@ mal.
 | 2026-09-27 | Pas de synchronisation PC ↔ téléphone : `localStorage` par appareil | Acté |
 | 2026-09-27 | Seules 3 substitutions existent, celles que le document prévoit. Aucun remplacement inventé pour `releves_genoux_suspendus` si le parc n'a pas de barre haute | Acté |
 | 2026-09-27 | GitHub Pages | Provisoire — à confirmer que le compte GitHub existe, sinon Cloudflare Pages |
+| 2026-09-27 | Historique complet conservé, et non plus les deux dernières séances : sans lui, pas de courbe | Acté |
+| 2026-09-27 | Série de jours : un jour de repos prévu au programme maintient la série, la journée en cours ne la casse pas tant qu'elle n'est pas finie | Acté |
+| 2026-09-27 | Synchronisation Supabase par document unique fusionné, sans compte ni authentification | Acté |
+| 2026-09-27 | Identifiants Supabase saisis dans les réglages, jamais compilés — le dépôt GitHub Pages gratuit est public | Acté |
+| 2026-09-27 | Courbe en SVG écrit à la main, sans bibliothèque de graphiques | Acté |
+| 2026-09-27 | Export / import JSON conservé comme filet, même avec la synchronisation | Acté |
 
 ## 7. État d'avancement
 
@@ -100,7 +126,12 @@ mal.
 | Icônes, manifest, hors-ligne | Fait |
 | Test de rendu des 56 vues | Fait |
 | Dépôt git et workflow de déploiement | Fait |
+| Historique complet, clôture de séance, série de jours | Fait |
+| Courbe d'évolution des charges (fiche + vue progression) | Fait |
+| Export / import JSON | Fait |
+| Synchronisation Supabase et son test à deux appareils | Fait — jamais exécutée contre un vrai projet |
 | Déploiement effectif sur GitHub Pages | À faire — nécessite le dépôt distant |
+| Création du projet Supabase et saisie des identifiants | À faire — côté utilisateur |
 | Test sur téléphone réel, mode avion | À faire |
 
 ### Journal
@@ -109,6 +140,18 @@ mal.
 intégralement (47 fiches, 44 lignes d'exercice sur 5 séances), interface
 complète, PWA hors-ligne vérifiée (238 Kio précachés), deux scripts de contrôle
 verts. Reste le déploiement sur un dépôt distant et la validation sur téléphone.
+
+**2026-09-27, suite** — Benjamin demande des sauvegardes durables, une série de
+jours suivis et une courbe d'évolution des charges. Constat posé : le stockage
+navigateur ne peut pas porter un historique qu'on relit dans un an. Il choisit,
+en connaissance du surcoût, la PWA sur GitHub Pages doublée d'une base
+Supabase, plutôt qu'une page hébergée plus simple. Ajout du journal durable,
+de la clôture de séance, de la série, du calendrier de huit semaines, de la
+courbe SVG, de l'export / import JSON et de la synchronisation. Un troisième
+script de contrôle rejoue un cycle à deux appareils. 258 Kio précachés, quatre
+contrôles verts. Au passage : l'hypothèse « les salles captent mal » venait de
+moi et non de lui — il a confirmé avoir du réseau, mais a préféré garder le
+hors-ligne.
 
 ## 8. Points ouverts
 
@@ -123,5 +166,12 @@ verts. Reste le déploiement sur un dépôt distant et la validation sur télép
   app.
 - **Course à pied** : volume et type de sorties non précisés dans le markdown.
   L'app se contente d'afficher la consigne de placement.
-- **Pas de synchronisation** entre appareils. Un export/import JSON pourra être
-  ajouté si le besoin se confirme.
+- **Synchronisation jamais testée en vrai.** `check-sync.ts` valide la forme
+  des requêtes et la fusion contre un faux serveur, pas contre un projet
+  Supabase. À rejouer une fois le projet créé.
+- **Lecture de la base par quiconque a la clé.** La règle d'accès du script SQL
+  ouvre la table au rôle `anon`, sans authentification. Acceptable pour des
+  charges de musculation, à revoir si le contenu change de nature.
+- **Aucune vérification visuelle.** L'extension navigateur a été déclinée : les
+  vues sont montées et leur contenu vérifié hors navigateur, mais la mise en
+  page n'a jamais été regardée.

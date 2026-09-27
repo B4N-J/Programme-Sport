@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { getExercice } from '../data/exercices';
-import { derniereSeance, type EtatLigne, type SerieSaisie } from '../hooks/useSuiviSeance';
+import { useJournal } from '../hooks/useJournal';
+import type { EtatLigne, SerieSaisie } from '../hooks/useSuiviSeance';
 import { etiquettesSeries, formatDosage, formatRepos } from '../lib/format';
+import { derniereSeance } from '../lib/journal';
 import { haussePreconisee, resumerEntree } from '../lib/progression';
 import type { ExerciceEffectif } from '../lib/substitutions';
 import type { Jour, LigneSeance } from '../types';
@@ -21,13 +23,14 @@ type Props = {
 
 export function LigneExercice({ jour, ligne, effectif, etat, onBasculer, onSaisie }: Props) {
   const [ouvert, setOuvert] = useState(false);
+  const { journal } = useJournal();
   const { exercice, remplace } = effectif;
 
   const nbCases = etiquettesSeries(ligne.dosage).length;
   const faites = etat.cases.filter(Boolean).length;
   const terminee = faites === nbCases;
 
-  const precedente = derniereSeance(exercice.id);
+  const precedente = derniereSeance(journal, exercice.id);
   const hausse = haussePreconisee(ligne.dosage, precedente);
   const alternative = ligne.alternativeLibre ? getExercice(ligne.alternativeLibre) : undefined;
 

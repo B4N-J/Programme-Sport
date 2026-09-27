@@ -2,6 +2,7 @@ import { GLOSSAIRE, REGLES_GENERALES } from '../data/principes';
 import { useReglages } from '../hooks/useReglages';
 import { LIBELLES_CONDITIONS, type Reglages } from '../lib/substitutions';
 import { Entete } from './Entete';
+import { Sauvegarde } from './Sauvegarde';
 
 function Interrupteur({ actif, onChange, label }: { actif: boolean; onChange: () => void; label: string }) {
   return (
@@ -76,6 +77,8 @@ export function ReglagesView() {
           />
         </div>
       ))}
+
+      <Sauvegarde />
 
       <h2 className="section-titre">Vocabulaire</h2>
       {GLOSSAIRE.map((entree) => (

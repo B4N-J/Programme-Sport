@@ -9,14 +9,24 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { FicheExercice } from '../src/components/FicheExercice.tsx';
+import { ProgressionView } from '../src/components/ProgressionView.tsx';
 import { ReglagesView } from '../src/components/ReglagesView.tsx';
 import { SeanceView } from '../src/components/SeanceView.tsx';
 import { SemaineView } from '../src/components/SemaineView.tsx';
 import { EXERCICES } from '../src/data/exercices.ts';
 import { SEANCES } from '../src/data/seances.ts';
+import { JournalProvider } from '../src/hooks/useJournal.tsx';
 import { MinuteurProvider } from '../src/hooks/useMinuteur.tsx';
 import { ReglagesProvider } from '../src/hooks/useReglages.tsx';
 import { formatDosage, formatRepos } from '../src/lib/format.ts';
+import {
+  calculerStreak,
+  fusionner,
+  metriquePertinente,
+  pointsPourExercice,
+  JOURNAL_VIDE,
+  type Journal,
+} from '../src/lib/journal.ts';
 import { haussePreconisee } from '../src/lib/progression.ts';
 import { exerciceEffectif, REGLAGES_PAR_DEFAUT } from '../src/lib/substitutions.ts';
 
@@ -36,15 +46,18 @@ function rendre(route: string): string {
   return renderToStaticMarkup(
     <MemoryRouter initialEntries={[route]}>
       <ReglagesProvider>
+        <JournalProvider>
         <MinuteurProvider sonActive={false}>
           <Routes>
             <Route path="/" element={<SemaineView />} />
             <Route path="/jour/:jour" element={<SeanceView />} />
             <Route path="/exercice/:id" element={<FicheExercice />} />
+            <Route path="/progression" element={<ProgressionView />} />
             <Route path="/reglages" element={<ReglagesView />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </MinuteurProvider>
+        </JournalProvider>
       </ReglagesProvider>
     </MemoryRouter>,
   );
@@ -155,6 +168,99 @@ attendre('hausse préconisée', haussePreconisee(dosage3x8a12, auPlafond), true)
 attendre('hausse non préconisée', haussePreconisee(dosage3x8a12, endessous), false);
 attendre('hausse sans historique', haussePreconisee(dosage3x8a12, null), false);
 
+// ------------------------------------------------------------ Vue progression
+verifier('progression', '/progression', [
+  'Progression',
+  'jour de suite',
+  'Huit dernières semaines',
+  'séance faite',
+  'Évolution des charges',
+]);
+
+// ------------------------------------------------------------------- Journal
+// Repère fixe : 2026-09-21 est un lundi, 2026-09-24 un jeudi (repos),
+// 2026-09-27 un dimanche (repos).
+const journalPlein: Journal = {
+  ...JOURNAL_VIDE,
+  seances: Object.fromEntries(
+    (['2026-09-21', '2026-09-22', '2026-09-23', '2026-09-25', '2026-09-26'] as const).map(
+      (date, i) => [
+        date,
+        { jour: (['lundi', 'mardi', 'mercredi', 'vendredi', 'samedi'] as const)[i]!, termineeA: `${date}T19:00:00.000Z` },
+      ],
+    ),
+  ),
+};
+
+const dimanche = new Date('2026-09-27T12:00:00');
+const streakPlein = calculerStreak(journalPlein, dimanche);
+attendre('série : jours de repos compris', streakPlein.jours, 7);
+attendre('série : séances totales', streakPlein.total, 5);
+attendre('série : semaine en cours', streakPlein.semaine, 5);
+attendre('série : jour en cours honoré', streakPlein.enAttenteAujourdhui, false);
+
+const journalTroue: Journal = {
+  ...journalPlein,
+  seances: Object.fromEntries(
+    Object.entries(journalPlein.seances).filter(([date]) => date !== '2026-09-25'),
+  ),
+};
+attendre('série : cassée par une séance manquée', calculerStreak(journalTroue, dimanche).jours, 2);
+
+const lundiSuivant = new Date('2026-09-28T12:00:00');
+const streakEnCours = calculerStreak(journalPlein, lundiSuivant);
+attendre('série : la séance du jour ne casse rien', streakEnCours.jours, 7);
+attendre('série : séance du jour en attente', streakEnCours.enAttenteAujourdhui, true);
+attendre('série : aucune séance', calculerStreak(JOURNAL_VIDE, dimanche).jours, 0);
+
+// Fusion : rien ne se perd, et à date égale la version la plus fournie gagne.
+const appareilA: Journal = {
+  seances: { '2026-09-21': { jour: 'lundi', termineeA: '2026-09-21T19:00:00.000Z' } },
+  historique: { dc_halteres: [{ date: '2026-09-21', series: [{ kg: 20, reps: 10 }] }] },
+  majA: 1,
+};
+const appareilB: Journal = {
+  seances: { '2026-09-22': { jour: 'mardi', termineeA: '2026-09-22T19:00:00.000Z' } },
+  historique: {
+    dc_halteres: [
+      {
+        date: '2026-09-21',
+        series: [
+          { kg: 20, reps: 10 },
+          { kg: 20, reps: 9 },
+        ],
+      },
+    ],
+  },
+  majA: 2,
+};
+const fusionne = fusionner(appareilA, appareilB);
+attendre('fusion : les deux séances survivent', Object.keys(fusionne.seances).length, 2);
+attendre('fusion : la séance la plus fournie gagne', fusionne.historique.dc_halteres![0]!.series.length, 2);
+attendre('fusion : symétrique', JSON.stringify(fusionner(appareilB, appareilA).historique), JSON.stringify(fusionne.historique));
+
+// Courbe : ordre chronologique, charge maximale de chaque séance.
+const journalCourbe: Journal = {
+  ...JOURNAL_VIDE,
+  historique: {
+    dc_halteres: [
+      { date: '2026-09-28', series: [{ kg: 22, reps: 8 }, { kg: 24, reps: 6 }] },
+      { date: '2026-09-21', series: [{ kg: 20, reps: 10 }] },
+    ],
+    planche: [{ date: '2026-09-21', series: [{ kg: 0, reps: 45 }] }],
+  },
+};
+const courbe = pointsPourExercice(journalCourbe, 'dc_halteres');
+attendre('courbe : ordre chronologique', courbe[0]!.date, '2026-09-21');
+attendre('courbe : charge maximale de la séance', courbe[1]!.charge, 24);
+attendre('courbe : volume cumulé', courbe[1]!.volume, 22 * 8 + 24 * 6);
+attendre('courbe : métrique en charge', metriquePertinente(courbe), 'charge');
+attendre(
+  'courbe : métrique en répétitions au poids du corps',
+  metriquePertinente(pointsPourExercice(journalCourbe, 'planche')),
+  'reps',
+);
+
 // ----------------------------------------------------------------- Verdict
 if (erreurs.length > 0) {
   console.error(`\n✗ ${erreurs.length} problème(s) de rendu :\n`);
@@ -164,6 +270,7 @@ if (erreurs.length > 0) {
 }
 
 console.log(
-  `✓ Rendu correct : 1 vue semaine, ${SEANCES.length} vues jour, ${EXERCICES.length} fiches, 1 vue réglages.`,
+  `✓ Rendu correct : 1 vue semaine, ${SEANCES.length} vues jour, ${EXERCICES.length} fiches, 1 vue progression, 1 vue réglages.`,
 );
 console.log('✓ Substitutions, formats et double progression conformes.');
+console.log('✓ Série de jours, fusion entre appareils et courbes conformes.');

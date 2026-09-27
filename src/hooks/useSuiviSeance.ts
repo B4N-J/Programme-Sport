@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
 
 import { cleDuJour } from '../lib/jour';
-import { clePourHistorique, type EntreeHistorique, type SerieRealisee } from '../lib/progression';
-import { ecrire, lire, supprimer, useLocalStorage } from './useLocalStorage';
+import type { SerieRealisee } from '../lib/progression';
+import { useJournal } from './useJournal';
+import { useLocalStorage } from './useLocalStorage';
 
 export type SerieSaisie = { kg: string; reps: string };
 export type EtatLigne = { cases: boolean[]; saisies: SerieSaisie[] };
@@ -17,31 +18,11 @@ function ajuster(etat: EtatLigne | undefined, nbCases: number): EtatLigne {
   return { cases, saisies };
 }
 
-/** Écrit la séance du jour en tête de l'historique de l'exercice (2 entrées gardées). */
-function enregistrerHistorique(exerciceId: string, saisies: SerieSaisie[]): void {
-  const cle = clePourHistorique(exerciceId);
-  const series: SerieRealisee[] = saisies
+/** Les champs saisis deviennent des séries mesurables ; les vides sont ignorés. */
+function enSeries(saisies: SerieSaisie[]): SerieRealisee[] {
+  return saisies
     .map((s) => ({ kg: Number(s.kg.replace(',', '.')) || 0, reps: Number(s.reps) || 0 }))
     .filter((s) => s.reps > 0);
-
-  const aujourdhui = cleDuJour();
-  const precedent = lire<EntreeHistorique[]>(cle, []).filter((e) => e.date !== aujourdhui);
-
-  if (series.length === 0) {
-    if (precedent.length === 0) supprimer(cle);
-    else ecrire(cle, precedent.slice(0, 2));
-    return;
-  }
-
-  ecrire(cle, [{ date: aujourdhui, series }, ...precedent].slice(0, 2));
-}
-
-/** Dernière séance enregistrée pour cet exercice, en excluant celle du jour. */
-export function derniereSeance(exerciceId: string): EntreeHistorique | null {
-  const aujourdhui = cleDuJour();
-  return lire<EntreeHistorique[]>(clePourHistorique(exerciceId), []).find(
-    (e) => e.date !== aujourdhui,
-  ) ?? null;
 }
 
 /**
@@ -51,6 +32,7 @@ export function derniereSeance(exerciceId: string): EntreeHistorique | null {
  */
 export function useSuiviSeance() {
   const [suivi, setSuivi] = useLocalStorage<SuiviJour>(`muscu:seance:${cleDuJour()}`, {});
+  const { enregistrerSeries } = useJournal();
 
   const etatLigne = useCallback(
     (ordre: number, nbCases: number) => ajuster(suivi[String(ordre)], nbCases),
@@ -84,14 +66,14 @@ export function useSuiviSeance() {
 
       // Écrit hors de l'updater : celui-ci doit rester pur, StrictMode l'appelle
       // deux fois en développement.
-      enregistrerHistorique(exerciceId, saisies);
+      enregistrerSeries(exerciceId, enSeries(saisies));
 
       setSuivi((precedent) => ({
         ...precedent,
         [String(ordre)]: { ...ajuster(precedent[String(ordre)], nbCases), saisies },
       }));
     },
-    [suivi, setSuivi],
+    [suivi, setSuivi, enregistrerSeries],
   );
 
   const reinitialiser = useCallback(() => setSuivi({}), [setSuivi]);

@@ -1,12 +1,15 @@
-import { Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 
 import { SEANCES_PAR_JOUR } from '../data/seances';
+import { useJournal } from '../hooks/useJournal';
 import { useReglages } from '../hooks/useReglages';
 import { useSuiviSeance } from '../hooks/useSuiviSeance';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { estJourValide, libelleJour } from '../lib/jour';
+import { estTerminee } from '../lib/journal';
 import { etiquettesSeries } from '../lib/format';
 import { exerciceEffectif } from '../lib/substitutions';
+import type { Jour } from '../types';
 import { EchauffementCard } from './EchauffementCard';
 import { Entete } from './Entete';
 import { LigneExercice } from './LigneExercice';
@@ -15,6 +18,7 @@ export function SeanceView() {
   const { jour } = useParams();
   const { reglages } = useReglages();
   const { etatLigne, basculerCase, setSaisie, reinitialiser, nbCochees } = useSuiviSeance();
+  const { journal, terminerSeance, annulerSeance } = useJournal();
 
   // Pendant une séance, l'écran ne doit pas s'éteindre entre deux exercices.
   useWakeLock(reglages.garderEcranAllume);
@@ -35,6 +39,11 @@ export function SeanceView() {
       </>
     );
   }
+
+  const totalSeries = seance.lignes.reduce(
+    (n, ligne) => n + etiquettesSeries(ligne.dosage).length,
+    0,
+  );
 
   return (
     <>
@@ -85,6 +94,60 @@ export function SeanceView() {
           );
         })}
       </ul>
+
+      <ClotureSeance
+        jour={jour}
+        faites={nbCochees}
+        total={totalSeries}
+        terminee={estTerminee(journal)}
+        onTerminer={() => terminerSeance(jour)}
+        onAnnuler={annulerSeance}
+      />
     </>
+  );
+}
+
+type ProposCloture = {
+  jour: Jour;
+  faites: number;
+  total: number;
+  terminee: boolean;
+  onTerminer: () => void;
+  onAnnuler: () => void;
+};
+
+/**
+ * Clôturer la séance est un geste explicite : c'est lui qui alimente la série
+ * de jours suivis. Cocher toutes les cases ne suffit pas — on peut très bien
+ * finir sans avoir tout renseigné, ou renseigner sans s'être entraîné.
+ */
+function ClotureSeance({ jour, faites, total, terminee, onTerminer, onAnnuler }: ProposCloture) {
+  if (terminee) {
+    return (
+      <section className="cloture terminee">
+        <p>
+          <strong>Séance clôturée.</strong> Elle compte dans ta série.
+        </p>
+        <div className="cloture-actions">
+          <Link className="bouton" to="/progression">
+            Voir la progression
+          </Link>
+          <button type="button" className="bouton discret" onClick={onAnnuler}>
+            Annuler la clôture
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="cloture">
+      <p className="note">
+        {faites} série{faites > 1 ? 's' : ''} sur {total} cochée{faites > 1 ? 's' : ''}.
+      </p>
+      <button type="button" className="bouton principal" onClick={onTerminer}>
+        Terminer la séance de {libelleJour(jour).toLowerCase()}
+      </button>
+    </section>
   );
 }

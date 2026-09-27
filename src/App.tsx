@@ -1,10 +1,12 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { FicheExercice } from './components/FicheExercice';
+import { ProgressionView } from './components/ProgressionView';
 import { ReglagesView } from './components/ReglagesView';
 import { RestTimer } from './components/RestTimer';
 import { SeanceView } from './components/SeanceView';
 import { SemaineView } from './components/SemaineView';
+import { JournalProvider } from './hooks/useJournal';
 import { MinuteurProvider } from './hooks/useMinuteur';
 import { ReglagesProvider, useReglages } from './hooks/useReglages';
 
@@ -22,6 +24,7 @@ function Contenu() {
           <Route path="/" element={<SemaineView />} />
           <Route path="/jour/:jour" element={<SeanceView />} />
           <Route path="/exercice/:id" element={<FicheExercice />} />
+          <Route path="/progression" element={<ProgressionView />} />
           <Route path="/reglages" element={<ReglagesView />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -37,7 +40,9 @@ export function App() {
     // accepte pas) et le geste « retour » fonctionne en PWA plein écran.
     <HashRouter>
       <ReglagesProvider>
-        <Contenu />
+        <JournalProvider>
+          <Contenu />
+        </JournalProvider>
       </ReglagesProvider>
     </HashRouter>
   );

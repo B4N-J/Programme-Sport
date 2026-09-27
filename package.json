@@ -9,8 +9,9 @@
     "preview": "vite preview",
     "check:data": "tsx scripts/check-data.ts",
     "check:rendu": "tsx scripts/check-rendu.tsx",
-    "check": "npm run check:data && npm run check:rendu && npm run typecheck",
-    "typecheck": "tsc --noEmit"
+    "check": "npm run check:data && npm run check:rendu && npm run check:sync && npm run typecheck",
+    "typecheck": "tsc --noEmit",
+    "check:sync": "tsx scripts/check-sync.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -2,9 +2,12 @@ import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { getExercice } from '../data/exercices';
 import { SEANCES_PAR_JOUR } from '../data/seances';
+import { useJournal } from '../hooks/useJournal';
 import { formatDosage, formatRepos } from '../lib/format';
 import { estJourValide } from '../lib/jour';
+import { pointsPourExercice } from '../lib/journal';
 import { LIBELLE_GROUPE } from '../types';
+import { Courbe } from './Courbe';
 import { Entete } from './Entete';
 
 /** Rappel du dosage prescrit quand la fiche est ouverte depuis une séance. */
@@ -26,12 +29,14 @@ function RappelPrescription({ jour, ordre }: { jour: string; ordre: number }) {
 export function FicheExercice() {
   const { id } = useParams();
   const [params] = useSearchParams();
+  const { journal } = useJournal();
   const exercice = id ? getExercice(id) : undefined;
 
   if (!exercice) return <Navigate to="/" replace />;
 
   const depuisJour = params.get('jour');
   const retourOrdre = Number(params.get('retour'));
+  const points = pointsPourExercice(journal, exercice.id);
 
   return (
     <>
@@ -131,6 +136,13 @@ export function FicheExercice() {
           <section className="fiche-bloc">
             <h2>Note</h2>
             <p>{exercice.note}</p>
+          </section>
+        )}
+
+        {points.length > 0 && (
+          <section className="fiche-bloc">
+            <h2>Évolution</h2>
+            <Courbe points={points} />
           </section>
         )}
       </div>

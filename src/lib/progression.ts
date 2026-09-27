@@ -8,7 +8,6 @@ export type EntreeHistorique = {
   series: SerieRealisee[];
 };
 
-export const clePourHistorique = (exerciceId: string) => `muscu:historique:${exerciceId}`;
 
 /** « 22 kg × 10, 10, 9 » — ou « 10, 10, 9 » au poids du corps. */
 export function resumerEntree(entree: EntreeHistorique): string {

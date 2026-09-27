@@ -684,3 +684,323 @@ a {
   text-align: center;
   color: var(--texte-faible);
 }
+
+/* ------------------------------------------------------- Série et progression */
+.badge.faite {
+  background: var(--succes);
+  color: var(--fond);
+}
+
+.bandeau-streak {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  min-height: var(--cible);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: linear-gradient(0deg, var(--accent-sourd) 0%, var(--fond-carte) 80%);
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.bandeau-streak-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bandeau-streak-corps strong {
+  font-size: 1.05rem;
+}
+
+.bandeau-streak-corps span {
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+}
+
+.bloc {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--fond-carte);
+}
+
+.bloc h2 {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texte-doux);
+}
+
+.streak {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.streak-nombre {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-unite {
+  color: var(--texte-doux);
+}
+
+.streak-note {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stats li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  background: var(--fond-carte-haut);
+  text-align: center;
+}
+
+.stats strong {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats span {
+  font-size: 0.72rem;
+  color: var(--texte-doux);
+  line-height: 1.25;
+}
+
+/* ------------------------------------------------------------------ Calendrier */
+.calendrier {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calendrier-entete,
+.calendrier-semaine {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendrier-entete span {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--texte-faible);
+}
+
+.case {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  background: var(--fond-carte-haut);
+  border: 1px solid transparent;
+}
+
+.case.faite {
+  background: var(--succes);
+}
+
+.case.repos {
+  background: color-mix(in srgb, var(--repos) 35%, transparent);
+}
+
+.case.manquee {
+  background: color-mix(in srgb, var(--alerte) 28%, transparent);
+}
+
+.case.futur {
+  background: transparent;
+  border-color: var(--bordure);
+}
+
+.case.aujourdhui {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.legende-calendrier {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--texte-doux);
+}
+
+.legende-calendrier li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* La légende montre la couleur, pas une case du calendrier : taille fixe. */
+.legende-calendrier .case {
+  width: 12px;
+  height: 12px;
+  aspect-ratio: auto;
+}
+
+/* --------------------------------------------------------------------- Courbe */
+.courbe-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.courbe-axe {
+  stroke: var(--bordure);
+  stroke-width: 1;
+}
+
+.courbe-graduation {
+  fill: var(--texte-faible);
+  font-size: 9px;
+}
+
+.courbe-trace {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.courbe-aire {
+  fill: color-mix(in srgb, var(--accent) 16%, transparent);
+  stroke: none;
+}
+
+.courbe-point {
+  fill: var(--fond-carte);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.courbe-point.actif {
+  fill: var(--accent);
+}
+
+.courbe-legende {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+.courbe-legende .hausse {
+  color: var(--succes);
+}
+
+.courbe-vide {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+/* ------------------------------------------------------- Clôture et formulaires */
+.cloture {
+  margin: 20px 0 8px;
+  padding: 16px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--fond-carte);
+  text-align: center;
+}
+
+.cloture.terminee {
+  border-color: color-mix(in srgb, var(--succes) 50%, var(--bordure));
+}
+
+.cloture p {
+  margin: 0 0 12px;
+}
+
+.cloture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.champ-texte,
+.champ-select {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.etiquette {
+  font-size: 0.78rem;
+  color: var(--texte-doux);
+}
+
+.champ-texte input,
+.champ-select select {
+  width: 100%;
+  min-height: var(--cible);
+  padding: 0 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  background: var(--fond-carte-haut);
+  color: var(--texte);
+  font: inherit;
+}
+
+.champ-texte input:focus-visible,
+.champ-select select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.etat-sync {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+}
+
+.etat-sync.ok {
+  color: var(--succes);
+}
+
+.etat-sync.erreur {
+  color: var(--alerte);
+}
+
+.sql {
+  overflow-x: auto;
+  padding: 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  background: var(--fond-carte-haut);
+  color: var(--texte-doux);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  -webkit-user-select: all;
+  user-select: all;
+}
