@@ -10,7 +10,8 @@
 | **Deadline** | Aucune, projet personnel |
 | **Langue** | Français, interface comprise |
 | **Stack** | Vite + React 18 + TypeScript, `vite-plugin-pwa`, `react-router` en HashRouter |
-| **Déploiement** | GitHub Pages via GitHub Actions |
+| **Déploiement** | GitHub Pages via GitHub Actions — <https://b4n-j.github.io/Programme-Sport/> |
+| **Dépôt** | `B4N-J/Programme-Sport`, public (GitHub Pages l'impose sur le plan gratuit) |
 
 ## 2. Le brief en clair
 
@@ -103,7 +104,7 @@ l'historique**.
 | 2026-09-27 | Les hypothèses matériel non tranchées (§ 5 du markdown) deviennent des interrupteurs de réglages qui pilotent les substitutions | Acté |
 | 2026-09-27 | Pas de synchronisation PC ↔ téléphone : `localStorage` par appareil | Acté |
 | 2026-09-27 | Seules 3 substitutions existent, celles que le document prévoit. Aucun remplacement inventé pour `releves_genoux_suspendus` si le parc n'a pas de barre haute | Acté |
-| 2026-09-27 | GitHub Pages | Provisoire — à confirmer que le compte GitHub existe, sinon Cloudflare Pages |
+| 2026-09-27 | GitHub Pages sur dépôt public `B4N-J/Programme-Sport` | Acté — déployé et vérifié |
 | 2026-09-27 | Historique complet conservé, et non plus les deux dernières séances : sans lui, pas de courbe | Acté |
 | 2026-09-27 | Série de jours : un jour de repos prévu au programme maintient la série, la journée en cours ne la casse pas tant qu'elle n'est pas finie | Acté |
 | 2026-09-27 | Synchronisation Supabase par document unique fusionné, sans compte ni authentification | Acté |
@@ -129,9 +130,10 @@ l'historique**.
 | Historique complet, clôture de séance, série de jours | Fait |
 | Courbe d'évolution des charges (fiche + vue progression) | Fait |
 | Export / import JSON | Fait |
-| Synchronisation Supabase et son test à deux appareils | Fait — jamais exécutée contre un vrai projet |
-| Déploiement effectif sur GitHub Pages | À faire — nécessite le dépôt distant |
-| Création du projet Supabase et saisie des identifiants | À faire — côté utilisateur |
+| Synchronisation Supabase et son test à deux appareils | Fait |
+| Déploiement effectif sur GitHub Pages | Fait |
+| Création du projet Supabase et de la table | Fait — cycle écriture / lecture / suppression vérifié contre la vraie base |
+| Saisie des identifiants dans les réglages, sur les deux appareils | À faire — côté utilisateur |
 | Test sur téléphone réel, mode avion | À faire |
 
 ### Journal
@@ -153,6 +155,15 @@ contrôles verts. Au passage : l'hypothèse « les salles captent mal » venait 
 moi et non de lui — il a confirmé avoir du réseau, mais a préféré garder le
 hors-ligne.
 
+**2026-09-27, fin** — Déploiement bout en bout. Dépôt `B4N-J/Programme-Sport`
+créé et poussé, workflow vert, site servi sur
+<https://b4n-j.github.io/Programme-Sport/> avec tous les fichiers précachés
+accessibles. Projet Supabase créé par Benjamin ; table, règle d'accès et clé
+vérifiées depuis le terminal par un cycle complet écriture / relecture /
+suppression. Un correctif au passage : l'endpoint REST collé à la place de
+l'URL du projet est désormais normalisé par `baseProjet()`. Reste la saisie
+des identifiants dans les réglages de chaque appareil et le test en mode avion.
+
 ## 8. Points ouverts
 
 - **Compte GitHub** à confirmer pour le déploiement ; Cloudflare Pages en
@@ -166,9 +177,12 @@ hors-ligne.
   app.
 - **Course à pied** : volume et type de sorties non précisés dans le markdown.
   L'app se contente d'afficher la consigne de placement.
-- **Synchronisation jamais testée en vrai.** `check-sync.ts` valide la forme
-  des requêtes et la fusion contre un faux serveur, pas contre un projet
-  Supabase. À rejouer une fois le projet créé.
+- **Synchronisation à deux appareils jamais observée.** Le cycle a été validé
+  contre la vraie base depuis une seule machine ; la convergence
+  téléphone ↔ ordinateur reste à constater.
+- **Identifiants Supabase hors du dépôt.** Ils ne sont écrits nulle part dans
+  le code ni dans ce fichier : le dépôt est public. Ils vivent dans les
+  réglages de l'app, sur chaque appareil.
 - **Lecture de la base par quiconque a la clé.** La règle d'accès du script SQL
   ouvre la table au rôle `anon`, sans authentification. Acceptable pour des
   charges de musculation, à revoir si le contenu change de nature.
