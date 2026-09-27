@@ -78,14 +78,20 @@ export function useSuiviSeance() {
       valeur: string,
       nbCases: number,
     ) => {
-      setSuivi((precedent) => {
-        const etat = ajuster(precedent[String(ordre)], nbCases);
-        const saisies = etat.saisies.map((s, i) => (i === index ? { ...s, [champ]: valeur } : s));
-        enregistrerHistorique(exerciceId, saisies);
-        return { ...precedent, [String(ordre)]: { ...etat, saisies } };
-      });
+      const saisies = ajuster(suivi[String(ordre)], nbCases).saisies.map((s, i) =>
+        i === index ? { ...s, [champ]: valeur } : s,
+      );
+
+      // Écrit hors de l'updater : celui-ci doit rester pur, StrictMode l'appelle
+      // deux fois en développement.
+      enregistrerHistorique(exerciceId, saisies);
+
+      setSuivi((precedent) => ({
+        ...precedent,
+        [String(ordre)]: { ...ajuster(precedent[String(ordre)], nbCases), saisies },
+      }));
     },
-    [setSuivi],
+    [suivi, setSuivi],
   );
 
   const reinitialiser = useCallback(() => setSuivi({}), [setSuivi]);
