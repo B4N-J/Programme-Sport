@@ -1,0 +1,686 @@
+/* ------------------------------------------------------------------ Tokens */
+:root {
+  --fond: #0f1115;
+  --fond-carte: #181b22;
+  --fond-carte-haut: #20242d;
+  --bordure: #2a2f3a;
+  --texte: #e8eaef;
+  --texte-doux: #9aa1b1;
+  --texte-faible: #6b7382;
+  --accent: #5b9cf8;
+  --accent-sourd: #1e3354;
+  --succes: #4ec98a;
+  --alerte: #f0b45c;
+  --repos: #7c8698;
+
+  --rayon: 12px;
+  --gouttiere: 16px;
+  --cible: 44px;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --fond: #f6f7f9;
+    --fond-carte: #ffffff;
+    --fond-carte-haut: #eef0f4;
+    --bordure: #dcdfe6;
+    --texte: #1a1d23;
+    --texte-doux: #5a6373;
+    --texte-faible: #868e9d;
+    --accent: #1d6fe0;
+    --accent-sourd: #dbe8fb;
+    --succes: #1a8a54;
+    --alerte: #9a6410;
+    --repos: #7c8698;
+    color-scheme: light;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--fond);
+  color: var(--texte);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* ----------------------------------------------------------------- Gabarit */
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 var(--gouttiere);
+  /* Marge basse : barre du minuteur + encoche. */
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+}
+
+.entete {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding-top: env(safe-area-inset-top);
+  margin: 0 calc(-1 * var(--gouttiere));
+  padding-inline: var(--gouttiere);
+  background: color-mix(in srgb, var(--fond) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.entete h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bouton-icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--cible);
+  min-height: var(--cible);
+  margin-inline: -10px;
+  border-radius: var(--rayon);
+  color: var(--texte-doux);
+}
+
+.bouton-icone:hover {
+  color: var(--texte);
+}
+
+.section-titre {
+  margin: 28px 0 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+}
+
+.note {
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+/* ------------------------------------------------------------ Vue semaine */
+.jours {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.carte-jour {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.carte-jour.aujourdhui {
+  border-color: var(--accent);
+  background: linear-gradient(0deg, var(--accent-sourd) 0%, var(--fond-carte) 70%);
+}
+
+.carte-jour.repos {
+  opacity: 0.72;
+}
+
+.carte-jour-corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.carte-jour-nom {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.carte-jour-titre {
+  margin-top: 2px;
+  font-size: 0.9rem;
+  color: var(--texte-doux);
+}
+
+.chevron {
+  color: var(--texte-faible);
+  flex-shrink: 0;
+}
+
+.badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: var(--fond-carte-haut);
+  color: var(--texte-doux);
+}
+
+.badge.aujourdhui {
+  background: var(--accent);
+  color: #0b1220;
+}
+
+.badge.parc {
+  background: #1f4436;
+  color: #8ee0b4;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .badge.parc {
+    background: #d6f2e3;
+    color: #12704a;
+  }
+}
+
+/* ------------------------------------------------------------- Vue séance */
+.pliable {
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  overflow: hidden;
+}
+
+.pliable > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--cible);
+  padding: 12px 16px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.pliable > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pliable[open] > summary {
+  border-bottom: 1px solid var(--bordure);
+}
+
+.pliable-corps {
+  padding: 12px 16px 16px;
+}
+
+.liste-numerotee {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--texte-doux);
+}
+
+.liste-numerotee li + li {
+  margin-top: 6px;
+}
+
+.lignes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ligne {
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  overflow: hidden;
+}
+
+.ligne.terminee {
+  border-color: color-mix(in srgb, var(--succes) 45%, var(--bordure));
+}
+
+.ligne-entete {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.ligne-ordre {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 1px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--texte-faible);
+  background: var(--fond-carte-haut);
+  border-radius: 8px;
+}
+
+.ligne.terminee .ligne-ordre {
+  background: color-mix(in srgb, var(--succes) 22%, transparent);
+  color: var(--succes);
+}
+
+.ligne-corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.ligne-nom {
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ligne-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+  font-variant-numeric: tabular-nums;
+}
+
+.ligne-consigne {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+  font-style: italic;
+}
+
+.ligne-drapeau {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  border-radius: 999px;
+}
+
+.ligne-drapeau.substitue {
+  background: var(--fond-carte-haut);
+  color: var(--texte-doux);
+}
+
+.ligne-drapeau.hausse {
+  background: color-mix(in srgb, var(--alerte) 20%, transparent);
+  color: var(--alerte);
+}
+
+.ligne-detail {
+  padding: 0 14px 14px 52px;
+}
+
+.ligne-rappel {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+/* -------------------------------------------------------- Tracker séries */
+.series {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.serie {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.case {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  min-height: var(--cible);
+  padding: 0 12px;
+  text-align: left;
+  background: var(--fond-carte-haut);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: var(--texte-doux);
+}
+
+.case.cochee {
+  background: color-mix(in srgb, var(--succes) 16%, transparent);
+  border-color: color-mix(in srgb, var(--succes) 40%, transparent);
+  color: var(--texte);
+}
+
+.case-marque {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--texte-faible);
+  border-radius: 6px;
+}
+
+.case.cochee .case-marque {
+  border-color: var(--succes);
+  background: var(--succes);
+  color: #06210f;
+}
+
+.saisie {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.saisie input {
+  width: 58px;
+  min-height: var(--cible);
+  padding: 0 8px;
+  text-align: center;
+  background: var(--fond-carte-haut);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.saisie input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.saisie-unite {
+  font-size: 0.78rem;
+  color: var(--texte-faible);
+}
+
+.actions-serie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  background: var(--fond-carte-haut);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.bouton.principal {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b1220;
+  font-weight: 600;
+}
+
+.bouton.discret {
+  background: none;
+  color: var(--texte-doux);
+}
+
+/* ------------------------------------------------------- Fiche exercice */
+.fiche-rappel {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  background: var(--accent-sourd);
+  border-radius: var(--rayon);
+  font-size: 0.9rem;
+}
+
+.fiche-bloc + .fiche-bloc {
+  margin-top: 20px;
+}
+
+.fiche-bloc h2 {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+}
+
+.fiche-bloc p {
+  margin: 0;
+  color: var(--texte-doux);
+}
+
+.fiche-bloc ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--texte-doux);
+}
+
+.fiche-bloc li + li {
+  margin-top: 4px;
+}
+
+.fiche-bloc.attention {
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--alerte) 12%, transparent);
+  border-radius: var(--rayon);
+}
+
+.fiche-variantes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.variante {
+  padding: 10px 12px;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: var(--texte-doux);
+}
+
+.variante strong {
+  color: var(--texte);
+}
+
+/* ------------------------------------------------------------- Réglages */
+.reglage {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.reglage + .reglage {
+  margin-top: 10px;
+}
+
+.reglage-corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.reglage-effet {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+.interrupteur {
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  padding: 3px;
+  background: var(--fond-carte-haut);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  transition: background 0.15s;
+}
+
+.interrupteur[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.interrupteur span {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: var(--texte-faible);
+  border-radius: 50%;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.interrupteur[aria-pressed='true'] span {
+  background: #0b1220;
+  transform: translateX(20px);
+}
+
+/* -------------------------------------------------------------- Minuteur */
+.minuteur {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 20;
+  padding: 12px var(--gouttiere) calc(12px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--fond-carte) 96%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--bordure);
+}
+
+.minuteur-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.minuteur-temps {
+  min-width: 68px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.minuteur.ecoule .minuteur-temps {
+  color: var(--succes);
+}
+
+.minuteur-corps {
+  flex: 1;
+  min-width: 0;
+}
+
+.minuteur-libelle {
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.minuteur-jauge {
+  height: 4px;
+  margin-top: 6px;
+  background: var(--fond-carte-haut);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.minuteur-jauge span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.minuteur.ecoule .minuteur-jauge span {
+  background: var(--succes);
+}
+
+.minuteur-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.minuteur-actions button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 8px;
+  background: var(--fond-carte-haut);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vide {
+  padding: 32px 0;
+  text-align: center;
+  color: var(--texte-faible);
+}
