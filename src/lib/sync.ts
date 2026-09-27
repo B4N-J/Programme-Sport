@@ -47,8 +47,20 @@ function entetes(config: ConfigSync): HeadersInit {
   };
 }
 
-const racine = (config: ConfigSync) =>
-  `${config.url.trim().replace(/\/+$/, '')}/rest/v1/${TABLE}`;
+/**
+ * Le tableau de bord Supabase met en avant l'endpoint REST
+ * (`https://xxx.supabase.co/rest/v1/`) au moins autant que l'URL du projet.
+ * Coller l'un pour l'autre est l'erreur naturelle : on la rattrape ici plutôt
+ * que d'exiger de l'utilisateur qu'il coupe la bonne partie.
+ */
+export function baseProjet(url: string): string {
+  return url
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/rest\/v1$/, '');
+}
+
+const racine = (config: ConfigSync) => `${baseProjet(config.url)}/rest/v1/${TABLE}`;
 
 /** Journal stocké côté serveur, ou `null` si la ligne n'existe pas encore. */
 export async function lireDistant(config: ConfigSync): Promise<Journal | null> {

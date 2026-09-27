@@ -11,7 +11,7 @@
 import { createServer } from 'node:http';
 
 import { JOURNAL_VIDE, type Journal } from '../src/lib/journal.ts';
-import { lireDistant, synchroniser, TABLE, type ConfigSync } from '../src/lib/sync.ts';
+import { baseProjet, lireDistant, synchroniser, TABLE, type ConfigSync } from '../src/lib/sync.ts';
 
 const erreurs: string[] = [];
 const CLE = 'cle-de-test';
@@ -113,6 +113,27 @@ const post = recu.find((r) => r.methode === 'POST')!;
 attendre('upsert déclaré', post.entetes['prefer'], 'resolution=merge-duplicates');
 attendre('conflit sur la clé primaire', post.chemin.includes('on_conflict=id'), true);
 attendre('jeton porteur', post.entetes['authorization'], `Bearer ${CLE}`);
+
+// --------------------------------------------- Adresses collées de travers
+attendre('URL du projet', baseProjet('https://abc.supabase.co'), 'https://abc.supabase.co');
+attendre(
+  'endpoint REST collé à la place',
+  baseProjet('https://abc.supabase.co/rest/v1/'),
+  'https://abc.supabase.co',
+);
+attendre(
+  'espaces et barre finale',
+  baseProjet('  https://abc.supabase.co/  '),
+  'https://abc.supabase.co',
+);
+
+// L'app doit fonctionner même si l'endpoint REST a été collé tel quel.
+const configRest: ConfigSync = { ...config, url: `${config.url}rest/v1/`, profil: 'principal' };
+attendre(
+  'synchronisation malgré l’endpoint REST',
+  Object.keys((await lireDistant(configRest))!.seances).sort(),
+  ['2026-09-21', '2026-09-22'],
+);
 
 // ------------------------------------------------------- Erreurs explicites
 try {
