@@ -71,13 +71,13 @@ export function ProgressionView() {
         <Calendrier journal={journal} />
         <ul className="legende-calendrier">
           <li>
-            <span className="case faite" /> séance faite
+            <span className="jour-case faite" /> séance faite
           </li>
           <li>
-            <span className="case repos" /> repos prévu
+            <span className="jour-case repos" /> repos prévu
           </li>
           <li>
-            <span className="case manquee" /> manquée
+            <span className="jour-case manquee" /> manquée
           </li>
         </ul>
       </section>
@@ -159,7 +159,7 @@ function Calendrier({ journal }: { journal: Journal }) {
           {semaine.map((jour) => (
             <span
               key={jour.cle}
-              className={`case ${jour.classe}${jour.cle === aujourdhui ? ' aujourdhui' : ''}`}
+              className={`jour-case ${jour.classe}${jour.cle === aujourdhui ? ' aujourdhui' : ''}`}
               title={`${dateCourte(jour.cle)} — ${libelle(jour.classe)}`}
             />
           ))}

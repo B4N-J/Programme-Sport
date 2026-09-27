@@ -5,6 +5,9 @@
  *
  * Usage : npm run check:rendu
  */
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Navigate, Route, Routes } from 'react-router-dom';
 
@@ -261,6 +264,40 @@ attendre(
   'reps',
 );
 
+// --------------------------------------------------------------- Feuille de style
+/**
+ * Un même sélecteur simple défini deux fois passe inaperçu : la seconde règle
+ * écrase silencieusement la première. C'est arrivé avec `.case`, partagé entre
+ * la case à cocher d'une série et la case du calendrier, dont l'`aspect-ratio`
+ * a transformé un bouton large en carré de 500 px de haut.
+ */
+const css = readFileSync(fileURLToPath(new URL('../src/styles.css', import.meta.url)), 'utf8');
+// Les blocs `@media` redéfinissent légitimement les mêmes sélecteurs.
+const cssHorsMedia = css.replace(/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/gs, '');
+const compte = new Map<string, number>();
+for (const [, nom] of cssHorsMedia.matchAll(/^\.([a-zA-Z0-9_-]+)\s*\{/gm)) {
+  compte.set(nom!, (compte.get(nom!) ?? 0) + 1);
+}
+for (const [nom, n] of compte) {
+  if (n > 1) erreurs.push(`style : « .${nom} » est défini ${n} fois, la dernière règle écrase les autres`);
+}
+
+// Toute classe posée par un composant doit exister dans la feuille de style.
+const sources = ['SemaineView', 'SeanceView', 'LigneExercice', 'SerieTracker', 'FicheExercice', 'ProgressionView', 'Courbe', 'Sauvegarde', 'ReglagesView', 'RestTimer', 'Entete', 'EchauffementCard'];
+for (const nom of sources) {
+  const source = readFileSync(
+    fileURLToPath(new URL(`../src/components/${nom}.tsx`, import.meta.url)),
+    'utf8',
+  );
+  for (const [, valeur] of source.matchAll(/className=(?:"([^"]*)"|\{`([^`]*)`\})/g)) {
+    for (const classe of (valeur ?? '').split(/[\s${}?:'"]+/).filter((c) => /^[a-zA-Z][\w-]*$/.test(c))) {
+      if (!css.includes(`.${classe}`)) {
+        erreurs.push(`style : ${nom} pose « ${classe} », absent de styles.css`);
+      }
+    }
+  }
+}
+
 // ----------------------------------------------------------------- Verdict
 if (erreurs.length > 0) {
   console.error(`\n✗ ${erreurs.length} problème(s) de rendu :\n`);
@@ -274,3 +311,4 @@ console.log(
 );
 console.log('✓ Substitutions, formats et double progression conformes.');
 console.log('✓ Série de jours, fusion entre appareils et courbes conformes.');
+console.log('✓ Feuille de style : aucun sélecteur dupliqué, aucune classe orpheline.');
